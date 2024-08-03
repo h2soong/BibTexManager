@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BibTeX Viewer</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    
+    .dropdown {
+      margin-right: 0.5rem;
+    }
+
+    .dropdown-toggle {
+      background-color: #007bff !important;
+      border-color: #007bff !important;
+      color: #fff !important;
+    }
+
+    /* 确保 body 始终占满整个页面高度 */
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* 使用 flex-grow 属性使 main 区域自动填充剩余空间 */
+    main {
+      flex-grow: 1;
+    }
+
+    .bib-table {
+      width: 100%;
+      border-collapse: collapse;
+      /* font-family: 'Courier New', monospace; */
+      background-color: #fff5ee;
+      table-layout:fixed;
+    }
+
+    .bib-table th, .bib-table td {
+      padding: 4px;
+      border: 1px solid #ccc;
+      vertical-align: middle;
+    }
+
+    .bib-table th {
+      background-color: #fff5ee;
+      color: black;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+
+    table td.selected {
+      background-color: #f1f1f1;
+    }
+    
+    .right-panel {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+   .selected {
+      background-color: yellow;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container">
+      <div class="d-flex">
+        
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="fileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            File
+          </button>
+          <div class="dropdown-menu" aria-labelledby="fileDropdown">
+            <a class="dropdown-item" href="#", id="openBibtex">Open BibTeX</a>
+            <a class="dropdown-item" href="#", id="importBibtex">Import BibTeX</a>
+            <a class="dropdown-item" href="#">Save to Local</a>
+          </div>
+        </div>
+        
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="editDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Edit
+          </button>
+          <div class="dropdown-menu" aria-labelledby="editDropdown">
+            <a class="dropdown-item" href="#">Insert Current Date</a>
+          </div>
+        </div>
+        
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="viewDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            View
+          </button>
+          <div class="dropdown-menu" aria-labelledby="viewDropdown">
+            <a class="dropdown-item" href="#">Increase Font Size</a>
+            <a class="dropdown-item" href="#">Decrease Font Size</a>
+          </div>
+        </div>
+        
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" id="aboutDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            About
+          </button>
+          <div class="dropdown-menu" aria-labelledby="aboutDropdown">
+            <a class="dropdown-item" href="#">About</a>
+          </div>
+        </div>
+        
+      </div>
+
+    <div style="vertical-align: bottom;" id="filePath"></div>
+    </div>
+
+  </nav>
+
+
+  <main class="container my-3" style="padding-top: 50px;" >
+
+    <div class="row">
+
+      <div class="col-md-10">
+      <table class="bib-table">
+          <thead>
+            <tr>
+              <th width="5">No.</th>
+              <th width="12">Type</th>
+              <th width="38">Title</th>
+              <th width="25">Author</th>
+              <th width="10">Year</th>
+              <th width="10">Note</th>
+            </tr>
+          </thead>
+          <tbody id="bib-entries"></tbody>
+        </table>
+      </div>
+
+    <div class="col-md-2">
+      <div style="position: fixed;">
+          <button class="btn btn-primary" type="button" id="SaveNote" style="float:right"> Save </button>
+
+          <textarea class="form-control" aria-label="With textarea" id="noteText"></textarea>
+
+          </div>
+    </div>
+
+      </div>
+  </main>
+
+  <footer class="footer bg-light mt-auto py-3">
+    <div class="container">
+      <span class="text-muted">&copy; 2024 My Bibtex Viewer</span>
+    </div>
+  </footer>
+
+
+  <script>
+    const textarea = document.getElementById('noteText');
+    function setTextareaHeight() {
+      textarea.style.height = `${window.innerHeight-200}px`;
+    }
+    window.addEventListener('load', setTextareaHeight);
+    window.addEventListener('resize', setTextareaHeight);
+
+
+    // const bibEntriesDiv = document.getElementById('bib-entries');
+     const bibEntriesBody = document.getElementById('bib-entries');
+
+    document.getElementById('openBibtex').addEventListener('click', () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.bib';
+      fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+
+        // document.getElementById('filePath').innerText=file.value;
+
+        parseBibFile(file);
+        // const reader = new FileReader();
+        // reader.onload = () => {
+        //   const bibData = reader.result;
+        //   parseBibData(bibData);
+        // };
+        // reader.readAsText(file);
+      });
+      fileInput.click();
+    });
+
+    document.getElementById('importBibtex').addEventListener('click', () => {
+      let newbib = window.prompt("Please paste your bibtex:");
+      if (newbib !== null) {
+        console.log("Hello, " + newbib + "!");
+      } else {
+        console.log("You canceled the prompt.");
+      }
+    });
+
+    function parseBibFile(bibFile) {
+      if (typeof bibFile === 'string') {
+        // If bibFile is a string, it's the file path
+        fetch(bibFile)
+          .then(response => response.text())
+          .then(bibData => parseAndDisplayBibData(bibData));
+      } else {
+        // If bibFile is a File object, read the file
+        const reader = new FileReader();
+        reader.onload = () => parseAndDisplayBibData(reader.result);
+        reader.readAsText(bibFile);
+      }
+    }
+
+    function parseAndDisplayBibData(bibData) {
+
+     bibEntriesBody.innerHTML = '';
+      const entries = bibData.split('@');
+
+      for (let i = 1; i < entries.length; i++) {
+          const entry = entries[i].trim();
+
+          const first_left_bracket=entry.indexOf('{');
+          const first_comma=entry.indexOf(',');
+
+          const entry_type=entry.slice(0,first_left_bracket);
+          const entry_key=entry.slice(first_left_bracket+1,first_comma);
+          const entry_main=entry.slice(first_comma+1,-1);
+          const result=entry_main.replace(/\s/g,'');
+          
+          const regex = /(\w+)\s*=\s*\{([^}]+)\}\,/g;
+
+          const entry_dict = {'type':entry_type,'no':i};
+          let each="";
+          while(each=regex.exec(entry_main)){
+            entry_dict[each[1].toLocaleLowerCase()]=each[2].trim().replace(/[\r\n]/g,"").replace(/\s+/g, ' ');
+          }
+          console.log(entry_dict);
+          
+          const entryRow = document.createElement('tr');
+          const row_fields=['no','type','title','author','year','note']
+          for (let j=0;j<row_fields.length;j++){
+            const subCell = document.createElement('td');
+
+            center_fields=['no','year'];
+            if (center_fields.includes(row_fields[j])){
+              subCell.style.textAlign='center';
+            }else{
+              subCell.style.textAlign='left';
+            }
+
+            if (row_fields[j] in entry_dict) {
+            subCell.textContent = entry_dict[row_fields[j]];
+            } else {
+            subCell.textContent = '';
+            }
+
+            entryRow.appendChild(subCell);
+          }
+
+          bibEntriesBody.appendChild(entryRow);
+
+      }
+
+
+
+
+      // const table = document.getElementById('myTable');
+    const selectedRowContent = document.getElementById('noteText');
+
+    bibEntriesBody.addEventListener('click', (event) => {
+      if (event.target.tagName === 'TD') {
+        const row = event.target.parentElement;
+        toggleSelectedRow(row);
+        updateSelectedRowContent(row);
+      }
+    });
+
+    function toggleSelectedRow(row) {
+      const selectedRow = bibEntriesBody.querySelector('.selected');
+      if (selectedRow) {
+        selectedRow.classList.remove('selected');
+      }
+      row.classList.add('selected');
+    }
+
+    function updateSelectedRowContent(row) {
+      const cells = row.getElementsByTagName('td');
+      const rowContent = Array.from(cells).map(cell => cell.textContent).join('\n');
+      selectedRowContent.value = rowContent;
+    }
+
+  }    
+
+
+
+
+  </script>
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
